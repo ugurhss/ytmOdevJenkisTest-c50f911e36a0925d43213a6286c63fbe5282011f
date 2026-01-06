@@ -17,4 +17,15 @@ export default defineConfig({
             },
         }),
     ],
+
+    // ✅ Docker içinde Vite/HMR düzgün çalışsın diye
+    server: {
+        host: true,        // 0.0.0.0
+        port: 5173,
+        strictPort: true,
+        hmr: {
+            host: 'localhost',
+            port: 5173,
+        },
+    },
 });

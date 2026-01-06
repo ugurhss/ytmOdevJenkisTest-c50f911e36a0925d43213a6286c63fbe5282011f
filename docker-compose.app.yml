@@ -3,7 +3,6 @@ services:
     image: laravel-ci-image:latest
     working_dir: /app
     volumes:
-      # APP_SOURCE Jenkins pipeline'da host workspace'ini geçirir, lokalde . varsayılan kalır
       - ${APP_SOURCE:-.}:/app
     ports:
       - "8000:8000"
@@ -11,7 +10,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      APP_ENV: testing
+      APP_ENV: local
       APP_DEBUG: "true"
       DB_CONNECTION: mysql
       DB_HOST: db
@@ -32,6 +31,21 @@ services:
       timeout: 3s
       retries: 60
 
+  node:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ${APP_SOURCE:-.}:/app
+    ports:
+      - "5173:5173"
+    command: >
+      sh -lc "
+        npm ci || npm install &&
+        npm run dev -- --host 0.0.0.0 --port 5173
+      "
+    depends_on:
+      - app
+
   db:
     image: mysql:8.0
     environment:
@@ -46,3 +60,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 60
+  selenium:
+    image: selenium/standalone-chrome:latest
+    shm_size: 2gb
+    ports:
+      - "4444:4444"
