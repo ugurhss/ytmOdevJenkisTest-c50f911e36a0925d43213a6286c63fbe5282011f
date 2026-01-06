@@ -6,7 +6,7 @@ pipeline {
     CI_IMAGE = "laravel-ci-image:latest"
 
     // Jenkins HOME Docker volume adı (senin setup)
-    JENKINS_VOL = "jenkins-laravel_jenkins_home"
+    JENKINS_VOL = "ci-infra_jenkins_home"
 
     // Jenkins container içindeki workspace (Job adı: laravel-ci)
     WS = "/var/jenkins_home/workspace/laravel-ci"
