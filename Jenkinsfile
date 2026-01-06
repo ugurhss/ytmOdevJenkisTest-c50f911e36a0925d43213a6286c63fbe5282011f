@@ -11,7 +11,7 @@ pipeline {
     // Jenkins container içindeki workspace (Job adı: laravel-ci)
     WS = "/var/jenkins_home/workspace/laravel-ci"
 
-    // Her build için ayrı compose projesi
+    // Her build için ayrı compose projesiss
     COMPOSE_PROJECT_NAME = "laravelci-${BUILD_NUMBER}"
   }
 
