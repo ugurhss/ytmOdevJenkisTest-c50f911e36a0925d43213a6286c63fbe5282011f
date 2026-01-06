@@ -19,6 +19,7 @@ pipeline {
 
     stage('Checkout') {
       steps {
+        checkout scm
         sh '''
           set -e
           echo "== Checkout Debug =="
