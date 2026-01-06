@@ -11,7 +11,7 @@ pipeline {
     // Jenkins container içindeki workspace (Job adı: laravel-ci)
     WS = "/var/jenkins_home/workspace/laravel-ci"
 
-    // Her build için ayrı compose projesiss
+    // Her build için ayrı compose projesi
     COMPOSE_PROJECT_NAME = "laravelci-${BUILD_NUMBER}"
   }
 
@@ -19,7 +19,6 @@ pipeline {
 
     stage('Checkout') {
       steps {
-        checkout scm
         sh '''
           set -e
           echo "== Checkout Debug =="
