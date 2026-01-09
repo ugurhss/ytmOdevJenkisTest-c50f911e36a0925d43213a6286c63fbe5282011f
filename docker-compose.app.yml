@@ -62,6 +62,7 @@ services:
       retries: 60
   selenium:
     image: selenium/standalone-chrome:latest
+    platform: linux/amd64
     shm_size: 2gb
     ports:
       - "4444:4444"
