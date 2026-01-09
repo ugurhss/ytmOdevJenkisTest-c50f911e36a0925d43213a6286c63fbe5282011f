@@ -1,0 +1,7 @@
+services:
+  app:
+    ports: []
+  node:
+    ports: []
+  selenium:
+    ports: []

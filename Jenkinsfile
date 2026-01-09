@@ -27,6 +27,7 @@ pipeline {
 
           test -f composer.json && echo "✅ composer.json var" || (echo "❌ composer.json yok" && exit 1)
           test -f docker-compose.app.yml && echo "✅ docker-compose.app.yml var" || (echo "❌ docker-compose.app.yml yok" && exit 1)
+          test -f ci/docker-compose.ci.yml && echo "✅ ci/docker-compose.ci.yml var" || (echo "❌ ci/docker-compose.ci.yml yok" && exit 1)
           test -f ci/Dockerfile.ci && echo "✅ ci/Dockerfile.ci var" || (echo "❌ ci/Dockerfile.ci yok" && exit 1)
 
           echo "== Docker version =="
@@ -109,6 +110,7 @@ pipeline {
           cd ${WS}
           echo "PWD=$(pwd)"
           ls -la docker-compose.app.yml
+          ls -la ci/docker-compose.ci.yml
           # Jenkins volume içindeki gerçek host path'i bulup compose'a APP_SOURCE olarak iletiyoruz
           HOST_WS=$(docker volume inspect ${JENKINS_VOL} -f '{{.Mountpoint}}')
           APP_SOURCE="$HOST_WS/workspace/laravel-ci"
@@ -116,13 +118,13 @@ pipeline {
           echo "APP_SOURCE=$APP_SOURCE"
 
           echo "-> compose up"
-          docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml up -d
+          docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml up -d
 
           echo "-> compose ps"
-          docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml ps || true
+          docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml ps || true
 
-          DB_CID=$(docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml ps -q db || true)
-          APP_CID=$(docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml ps -q app || true)
+          DB_CID=$(docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml ps -q db || true)
+          APP_CID=$(docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml ps -q app || true)
 
           echo "DB_CID=$DB_CID"
           echo "APP_CID=$APP_CID"
@@ -133,8 +135,8 @@ pipeline {
           # DB yoksa direkt fail + log
           if [ -z "$DB_CID" ]; then
             echo "❌ DB container bulunamadı."
-            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml ps || true
-            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml logs db --tail=200 || true
+            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml ps || true
+            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml logs db --tail=200 || true
             exit 1
           fi
 
@@ -151,11 +153,11 @@ pipeline {
           if [ -z "$APP_CID" ]; then
             echo "❌ APP container bulunamadı (muhtemelen crash)."
             echo "---- compose ps ----"
-            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml ps || true
+            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml ps || true
             echo "---- compose logs (app) ----"
-            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml logs app --tail=200 || true
+            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml logs app --tail=200 || true
             echo "---- compose logs (db) ----"
-            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml logs db --tail=200 || true
+            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml logs db --tail=200 || true
             exit 1
           fi
 
@@ -169,7 +171,7 @@ pipeline {
           done
 
           echo "== HEALTHCHECK SON DURUM =="
-          docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml ps || true
+          docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml ps || true
         '''
       }
     }
@@ -186,12 +188,12 @@ pipeline {
           APP_SOURCE="$HOST_WS/workspace/laravel-ci"
           export APP_SOURCE
           echo "APP_SOURCE=$APP_SOURCE"
-          APP_CID=$(docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml ps -q app || true)
+          APP_CID=$(docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml ps -q app || true)
 
           if [ -z "$APP_CID" ]; then
             echo "❌ Migration öncesi APP container yok."
-            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml ps || true
-            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml logs app --tail=200 || true
+            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml ps || true
+            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml logs app --tail=200 || true
             exit 1
           fi
 
@@ -216,12 +218,12 @@ pipeline {
           APP_SOURCE="$HOST_WS/workspace/laravel-ci"
           export APP_SOURCE
           echo "APP_SOURCE=$APP_SOURCE"
-          APP_CID=$(docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml ps -q app || true)
+          APP_CID=$(docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml ps -q app || true)
 
           if [ -z "$APP_CID" ]; then
             echo "❌ Feature test öncesi APP container yok."
-            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml ps || true
-            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml logs app --tail=200 || true
+            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml ps || true
+            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml logs app --tail=200 || true
             exit 1
           fi
 
@@ -272,12 +274,12 @@ EOF
           APP_SOURCE="$HOST_WS/workspace/laravel-ci"
           export APP_SOURCE
           echo "APP_SOURCE=$APP_SOURCE"
-          APP_CID=$(docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml ps -q app || true)
+          APP_CID=$(docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml ps -q app || true)
 
           if [ -z "$APP_CID" ]; then
             echo "❌ E2E öncesi APP container yok."
-            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml ps || true
-            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml logs app --tail=200 || true
+            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml ps || true
+            docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml logs app --tail=200 || true
             exit 1
           fi
 
@@ -322,10 +324,10 @@ CHECK_URLS="http://127.0.0.1:8000 http://127.0.0.1:8000/login http://127.0.0.1:8
         else
           echo "⚠️ Jenkins volume ${JENKINS_VOL} inspect failed; using default APP_SOURCE"
         fi
-        docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml ps || true
-        docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml logs app --tail=120 || true
-        docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml logs db --tail=120 || true
-        docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml down -v || true
+        docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml ps || true
+        docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml logs app --tail=120 || true
+        docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml logs db --tail=120 || true
+        docker compose -p ${COMPOSE_PROJECT_NAME} -f docker-compose.app.yml -f ci/docker-compose.ci.yml down -v || true
       '''
     }
   }
